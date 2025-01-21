@@ -5,14 +5,17 @@ phases:
     runtime-versions:
       python: 3.8
     commands:
-      - echo "Installing dependencies"
-      - pip install -r requirements.txt
-      - echo "Installing security scanning tools"
-      - pip install bandit
+      - echo "Checking for Python3, pip, and bandit availability"
+      - which python3 || { echo "Python3 is not available"; exit 1; }
+      - which pip || { echo "pip is not available"; exit 1; }
+      - which bandit || echo "Bandit is not installed, installing it now"
+      - pip install bandit || { echo "Failed to install Bandit"; exit 1; }
+      - echo "Installing other dependencies"
+      - pip install -r requirements.txt || { echo "Failed to install dependencies"; exit 1; }
   pre_build:
     commands:
       - echo "Running security scans"
-      - bandit -r .
+      - bandit -r . || { echo "Security scan failed"; exit 1; }
   build:
     commands:
       - echo "Building the application"
@@ -23,13 +26,11 @@ phases:
       - echo "Stopping any running instances of the app"
       - pkill -f app.py || true
       - echo "Starting the Flask app"
-      - nohup python3 app.py &
+      - nohup python3 app.py & || { echo "Failed to start the Flask app"; exit 1; }
 artifacts:
   files:
     - app.py
     - requirements.txt
-    - templates/**/*
-    - static/**/*
   discard-paths: yes
   base-directory: /path/to/your/app
 
