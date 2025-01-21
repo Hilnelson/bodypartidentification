@@ -1,0 +1,38 @@
+version: 0.2
+
+phases:
+  install:
+    runtime-versions:
+      python: 3.8
+    commands:
+      - echo "Installing dependencies"
+      - pip install -r requirements.txt
+      - echo "Installing security scanning tools"
+      - pip install bandit
+  pre_build:
+    commands:
+      - echo "Running security scans"
+      - bandit -r .
+  build:
+    commands:
+      - echo "Building the application"
+      - echo "No build steps needed for this Python app"
+  post_build:
+    commands:
+      - echo "Deploying the application"
+      - echo "Stopping any running instances of the app"
+      - pkill -f app.py || true
+      - echo "Starting the Flask app"
+      - nohup python3 app.py &
+artifacts:
+  files:
+    - app.py
+    - requirements.txt
+    - templates/**/*
+    - static/**/*
+  discard-paths: yes
+  base-directory: /path/to/your/app
+
+cache:
+  paths:
+    - '/root/.cache/pip/**/*'
